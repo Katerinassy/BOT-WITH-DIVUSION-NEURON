@@ -1,16 +1,37 @@
-# This is a sample Python script.
+from aiogram import Bot, Dispatcher, types, executor
+from neiro.neiro_gen import generate_image
+from neiro.neiro_assistent import get_response
+from neiro.neiro_consult import get_sovet
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+Api ='6952845827:AAGhIb7gVuSsez4edo_mLrE7KKw1aKXfgGY'
+bot = Bot(token=Api)
+dp = Dispatcher(bot)
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+@dp.message_handler(commands='start')
+async def start(message: types.Message):
+    await message.answer('Попробуй мой нейронку на минималках')
+
+@dp.message_handler(commands='sovet')
+async def analize_message(message:types.Message):
+    user = message.get_args()
+    response_text = await get_sovet(user)
+    await message.answer(response_text)
+@dp.message_handler(commands='generat_image')
+async def handle_message(message: types.Message):
+    user = message.get_args()
+    response_text = await get_response(user)
+    user_text = response_text
+    await message.reply(f"Вот твой улучшенный промпт {user_text}")
+    print(user_text)
+    await message.reply('Идёт генерация изображения, жди')
+
+    try:
+        image_data = generate_image(user_text)
+        await message.reply_photo(photo=image_data)
+    except Exception as e:
+        await message.reply(f"Произошла ошибка: {e}")
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+if __name__== '__main__':
+    executor.start_polling(dp, skip_updates=True)
